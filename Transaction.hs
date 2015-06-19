@@ -30,7 +30,7 @@ runNow io = do
   cont <- getCont
   liftIO $ do
     tid <- newThreadId
-    updateMainThread tid
+--    updateMainThread tid
     sc  <- newSCont $ io >> cont
     switchT (\_ -> return $ Thread tid sc)
 
@@ -41,5 +41,5 @@ runBack io name = do
   
 switchThread :: Transaction m => Thread -> m ()
 switchThread t@(Thread tid _) = liftIO $ do
-  updateMainThread tid
+--  updateMainThread tid
   switchT (\_ -> return t)
