@@ -15,13 +15,15 @@ initRegistry = M.fromList [
 data ShellConfig = ShellConfig_ {
   _prompt   :: String,
   _registry :: Registry,
-  _io       :: IO ()
+  _io       :: IO (),
+  _ioWithThread  :: Maybe (IO Thread)
 }
 
 defaultConfig = ShellConfig_ {
   _prompt   = "> ",
   _registry = initRegistry,
-  _io       = return ()
+  _io       = return (),
+  _ioWithThread = Nothing
 }
 
 

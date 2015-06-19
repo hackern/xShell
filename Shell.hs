@@ -22,12 +22,16 @@ instance Transaction Shell where
   getRegistry = gets _registry
 
   updateRegistry reg = do
-    ShellConfig_ p _ io <- get
-    put $ ShellConfig_ p reg io
+    ShellConfig_ p _ io mio <- get
+    put $ ShellConfig_ p reg io mio
 
   liftIO io = do
-    ShellConfig_ p reg ios <- get
-    put $ ShellConfig_ p reg (ios >> io)
+    ShellConfig_ p reg ios mio <- get
+    put $ ShellConfig_ p reg (ios >> io) mio
+
+  updateWithThread tio = do
+    ShellConfig_ p reg iso _ <- get
+    put $ ShellConfig_ p reg iso $ Just tio
 
 runShell config = runInputT defaultSettings $ loop config
 
@@ -38,8 +42,13 @@ loop config = do
     Nothing     -> loop config
     Just ""     -> loop config
     Just "quit" -> return ()
-    Just input  -> do let (mFeedback, config') = runState (evaluate input) config
-                      let (ShellConfig_ p reg io) = config'
-                      IO.liftIO io
+    Just input  -> do let ((mFeedback, mCallBack), config') = runState (evaluate input) config
+                      let (ShellConfig_ p reg _ _) = config'
                       withJust mFeedback $ \fb -> outputStrLn fb
-                      loop (ShellConfig_ p reg $ return ())
+                      case mCallBack of
+                        Just cb -> do let Just io = _ioWithThread config'
+                                      thread <- IO.liftIO io
+                                      let (_, config'') = runState (cb thread) config'
+                                      loop config''
+                        Nothing -> do IO.liftIO $ _io config'
+                                      loop (ShellConfig_ p reg (return ()) Nothing)
