@@ -1,12 +1,12 @@
 -- Shell of GHC
 -- Implementation of a task shell by utilizing LWC
+module Shell where
 import Def
 import Eval
 import System.Console.Haskeline
 import Control.Monad.IO.Class
 
-main :: IO ()
-main = runInputT defaultSettings $ loop defaultConfig
+startLoop = runInputT defaultSettings $ loop defaultConfig
 
 loop :: ShellConfig -> InputT IO ()
 loop config = do
@@ -15,9 +15,10 @@ loop config = do
     Nothing     -> loop config
     Just ""     -> loop config
     Just "quit" -> return ()
-    Just input  -> do let ((mFeedback, transaction), config') = runShell (evaluate input) config
-                      case mFeedback of
-                        Just feedback -> outputStrLn feedback
-                      liftIO transaction
+    Just input  -> do let ((mFeedback, mTransaction), config') = runShell (evaluate input cont) config
+                      withJust mFeedback $ \fb -> outputStrLn fb
+                      withJust mTransaction $ \io -> liftIO io
                       loop config'
-
+  where
+    cont :: IO ()
+    cont = runInputT defaultSettings $ loop config

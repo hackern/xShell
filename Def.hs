@@ -10,3 +10,8 @@ type Shell a = State ShellConfig a -- Context Wrapper
 defaultConfig = ShellConfig_ "> "
 
 runShell = runState
+
+withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
+withJust mx f = case mx of
+  Just x  -> f x
+  Nothing -> return ()
