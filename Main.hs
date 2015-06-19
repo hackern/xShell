@@ -1,5 +1,6 @@
 import Control.LWC.Conc
 import Shell
+import Config
 
 main :: IO ()
-main = startSystem startLoop
+main = startSystem $ runShell defaultConfig
