@@ -5,12 +5,11 @@ module Transaction (
 , updateThread
 , switchThread
 ) where
+
 import Data.Map as M
 import Config
-import Concurrent
-import Control.LWC.Conc
-import Control.LWC.Threads
-import Control.LWC.MVar
+import LwConc.Conc
+import LwConc.Threads
 
 class Monad m => Transaction m where
   liftIO :: IO () -> m ()

@@ -1,8 +1,7 @@
-import Control.LWC.Conc
+import LwConc.Conc
 import Shell
 import Config
-import Control.LWC.Threads
-import Concurrent
+import LwConc.Threads
 
 main :: IO ()
 main = startSystem $ do

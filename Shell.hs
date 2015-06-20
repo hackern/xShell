@@ -8,11 +8,9 @@ import Transaction
 import Config
 import Eval
 import Monad
-import System.Console.Haskeline
-import Control.Monad.IO.Class as IO
 import Control.Monad.State
-import Control.LWC.Conc
-
+import LwConc.Conc
+import System.IO
 type Shell = State ShellConfig
 
 instance Transaction Shell where
@@ -34,25 +32,21 @@ instance Transaction Shell where
     ShellConfig_ p reg iso _ <- get
     put $ ShellConfig_ p reg iso (Just tio)
 
+runShell :: ShellConfig -> IO ()
 runShell config = do
-                    config' <- runInputT defaultSettings $ loop config
-                    _ <- forkIO $ runShell config'
-                    return ()
-
-loop :: ShellConfig -> InputT IO ShellConfig
-loop config = do
-  maybeInput <- getInputLine $ _prompt config
-  case maybeInput of
-    Nothing     -> return config
-    Just ""     -> return config
-    Just "quit" -> return config
-    Just input  -> do let ((mFeedback, mCallBack), config') = runState (evaluate input) config
-                      let (ShellConfig_ p reg _ _) = config'
-                      withJust mFeedback $ \fb -> outputStrLn fb
-                      case mCallBack of
-                        Just cb -> do let Just io = _ioWithThread config'
-                                      thread <- IO.liftIO io
-                                      let (_, config'') = runState (cb thread) config'
-                                      return config''
-                        Nothing -> do IO.liftIO $ _io config'
-                                      return (ShellConfig_ p reg (return ()) Nothing)
+  putStr $ _prompt config
+  hFlush stdout
+  input <- getLine
+  case input of
+    ""     -> return ()
+    "quit" -> runShell config
+    input  -> do let ((mFeedback, mCallBack), config') = runState (evaluate input) config
+                 let (ShellConfig_ p reg _ _) = config'
+                 withJust mFeedback $ \fb -> print fb
+                 case mCallBack of
+                   Just cb -> do let Just io = _ioWithThread config'
+                                 thread <- io
+                                 let (_, config'') = runState (cb thread) config'
+                                 runShell config''
+                   Nothing -> do _io config'
+                                 runShell (ShellConfig_ p reg (return ()) Nothing)

@@ -1,8 +1,8 @@
 module Eval where
 import Data.Map as M
 import Transaction
-import Control.LWC.Threads
-import Control.LWC.Conc
+import LwConc.Threads
+import LwConc.Conc
 import Config
 
 evaluate :: Transaction m => String -> m (Maybe String, Maybe (Thread -> m ()))

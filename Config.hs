@@ -3,13 +3,12 @@ module Config (
   ShellConfig(..),
   defaultConfig
 ) where
-import Control.LWC.Threads
-import Control.LWC.MVar
+
+import LwConc.Threads
 import Apps.Printer
 import Apps.Shower
 import Apps.Counter
 import Data.Map as M
-
 
 type Registry = M.Map String (IO (), Maybe Thread)
 
